@@ -1,60 +1,285 @@
 from collections import defaultdict
 
+
+# =========================================================
+# CERTIFICATION LOGIC
+# =========================================================
+
 def certification(active_days, tpd_test):
+
+    active_days = int(active_days or 0)
+    tpd_test = int(tpd_test or 0)
+
+    # Not Active
     if active_days == 0 and tpd_test == 0:
         return "Not Active"
-    if 12 <= active_days <= 24 and tpd_test >= 3:
+
+    # Gold
+    if active_days >= 12 and tpd_test >= 3:
         return "Gold"
-    if 8 <= active_days <= 11 and tpd_test >= 2:
+
+    # Silver
+    if active_days >= 8 and tpd_test >= 2:
         return "Silver"
-    if 4 <= active_days <= 7 and tpd_test >= 1:
+
+    # Bronze
+    if active_days >= 4 and tpd_test >= 1:
         return "Bronze"
+
+    # Participation
     return "Participation Certificate"
 
+
+# =========================================================
+# CALCULATE INDIVIDUAL AWW PERFORMANCE
+# =========================================================
+
 def calculate_record(master, metrics):
-    photo = sum(int(m.ica_photo or 0) for m in metrics)
-    video = sum(int(m.ica_video or 0) for m in metrics)
-    active_days = sum(int(m.active_days or 0) for m in metrics)
-    tpd = sum(int(m.tpd_test or 0) for m in metrics)
-    active = 1 if active_days > 0 else 0
+
+    total_photo = sum(
+        int(metric.ica_photo or 0)
+        for metric in metrics
+    )
+
+    total_video = sum(
+        int(metric.ica_video or 0)
+        for metric in metrics
+    )
+
+    total_active_days = sum(
+        int(metric.active_days or 0)
+        for metric in metrics
+    )
+
+    total_tpd = sum(
+        int(metric.tpd_test or 0)
+        for metric in metrics
+    )
+
+    # Active status
+    active_aww = 1 if total_active_days > 0 else 0
+
+    # Certification
+    eligibility = certification(
+        total_active_days,
+        total_tpd
+    )
+
     return {
-        "district": master.district, "block": master.block,
-        "sector": master.sector, "supervisor": master.supervisor,
-        "aww_name": master.aww_name, "awc_code": master.awc_code,
-        "monthly_ica_photo": photo, "monthly_ica_video": video,
-        "monthly_ica_total": photo + video,
-        "monthly_active_days": active_days, "monthly_tpd_test": tpd,
-        "eligibility": certification(active_days, tpd),
-        "active_aww": active
+
+        # Location
+        "district": master.district,
+        "block": master.block,
+        "sector": master.sector,
+
+        # Supervisor
+        "supervisor": master.supervisor,
+
+        # AWW Details
+        "aww_name": master.aww_name,
+        "awc_code": master.awc_code,
+
+        # ICA Performance
+        "monthly_ica_photo": total_photo,
+        "monthly_ica_video": total_video,
+        "monthly_ica_total": (
+            total_photo + total_video
+        ),
+
+        # Activity Performance
+        "monthly_active_days": total_active_days,
+
+        # TPD Performance
+        "monthly_tpd_test": total_tpd,
+
+        # Achievement
+        "eligibility": eligibility,
+
+        # Status
+        "active_aww": active_aww
     }
+
+
+# =========================================================
+# DASHBOARD SUMMARY
+# =========================================================
 
 def summarize(records):
-    total = len(records)
-    gold = sum(r["eligibility"] == "Gold" for r in records)
-    silver = sum(r["eligibility"] == "Silver" for r in records)
-    bronze = sum(r["eligibility"] == "Bronze" for r in records)
-    certified = gold + silver + bronze
+
+    total_aww = len(records)
+
+    active_aww = sum(
+        record["active_aww"]
+        for record in records
+    )
+
+    inactive_aww = sum(
+        record["eligibility"] == "Not Active"
+        for record in records
+    )
+
+    gold = sum(
+        record["eligibility"] == "Gold"
+        for record in records
+    )
+
+    silver = sum(
+        record["eligibility"] == "Silver"
+        for record in records
+    )
+
+    bronze = sum(
+        record["eligibility"] == "Bronze"
+        for record in records
+    )
+
+    participation = sum(
+        record["eligibility"]
+        == "Participation Certificate"
+        for record in records
+    )
+
+    certified = (
+        gold
+        + silver
+        + bronze
+    )
+
+    certification_rate = (
+
+        round(
+            (certified / total_aww) * 100,
+            2
+        )
+
+        if total_aww > 0
+
+        else 0
+    )
+
     return {
-        "total_aww": total,
-        "active_aww": sum(r["active_aww"] for r in records),
-        "inactive_aww": sum(r["eligibility"] == "Not Active" for r in records),
-        "gold": gold, "silver": silver, "bronze": bronze,
-        "participation": sum(r["eligibility"] == "Participation Certificate" for r in records),
+
+        "total_aww": total_aww,
+
+        "active_aww": active_aww,
+
+        "inactive_aww": inactive_aww,
+
+        "gold": gold,
+
+        "silver": silver,
+
+        "bronze": bronze,
+
+        "participation": participation,
+
         "certified": certified,
-        "certification_rate": round(certified / total * 100, 2) if total else 0
+
+        "certification_rate": certification_rate
     }
 
-def rankings(records, key, limit, reverse=True):
+
+# =========================================================
+# RANKINGS
+# SUPERVISOR / BLOCK
+# =========================================================
+
+def rankings(
+    records,
+    key,
+    limit=10,
+    reverse=True
+):
+
     groups = defaultdict(list)
-    for r in records:
-        if r.get(key):
-            groups[r[key]].append(r)
+
+    # Group records
+    for record in records:
+
+        group_name = record.get(key)
+
+        if group_name:
+
+            groups[group_name].append(
+                record
+            )
+
     result = []
+
+    # Calculate each group's performance
     for name, rows in groups.items():
-        total = len(rows)
-        certified = sum(r["eligibility"] in ("Gold","Silver","Bronze") for r in rows)
-        active = sum(r["active_aww"] for r in rows)
-        score = round(certified / total * 100, 2) if total else 0
-        result.append({"name": name, "total_aww": total, "active_aww": active,
-                       "certified": certified, "score": score})
-    return sorted(result, key=lambda x: x["score"], reverse=reverse)[:limit]
+
+        total_aww = len(rows)
+
+        active_aww = sum(
+            row["active_aww"]
+            for row in rows
+        )
+
+        gold = sum(
+            row["eligibility"] == "Gold"
+            for row in rows
+        )
+
+        silver = sum(
+            row["eligibility"] == "Silver"
+            for row in rows
+        )
+
+        bronze = sum(
+            row["eligibility"] == "Bronze"
+            for row in rows
+        )
+
+        certified = (
+            gold
+            + silver
+            + bronze
+        )
+
+        score = (
+
+            round(
+                (certified / total_aww) * 100,
+                2
+            )
+
+            if total_aww > 0
+
+            else 0
+        )
+
+        result.append({
+
+            "name": name,
+
+            "total_aww": total_aww,
+
+            "active_aww": active_aww,
+
+            "gold": gold,
+
+            "silver": silver,
+
+            "bronze": bronze,
+
+            "certified": certified,
+
+            "score": score
+        })
+
+    # Sort ranking
+    sorted_result = sorted(
+
+        result,
+
+        key=lambda item: (
+            item["score"],
+            item["certified"],
+            item["active_aww"]
+        ),
+
+        reverse=reverse
+    )
+
+    return sorted_result[:limit]
