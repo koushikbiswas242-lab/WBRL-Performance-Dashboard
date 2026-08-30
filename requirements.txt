@@ -4,3 +4,6 @@ sqlalchemy==2.0.36
 pandas==2.2.3
 openpyxl==3.1.5
 python-multipart==0.0.20
+
+# PostgreSQL database driver
+psycopg2-binary==2.9.10
