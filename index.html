@@ -1,61 +1,482 @@
 <!doctype html>
 <html lang="en">
+
 <head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>WBRL Performance Dashboard</title>
-<link rel="stylesheet" href="/static/style.css">
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title>WBRL Performance Dashboard</title>
+
+    <link rel="stylesheet" href="/static/style.css">
 </head>
+
 <body>
+
 <div class="app">
-<aside class="sidebar">
-  <div class="brand"><div class="logo">W</div><div><h1>WBRL</h1><p>Performance Intelligence</p></div></div>
-  <p class="navtitle">DASHBOARDS</p>
-  <button class="nav active" data-page="dashboard">👑 <span>State Dashboard</span></button>
-  <p class="navtitle">DATA MANAGEMENT</p>
-  <button class="nav" data-page="master">⚙️ <span>Master Data Upload</span></button>
-  <button class="nav" data-page="ica">📤 <span>ICA Weekly Report</span></button>
-  <button class="nav" data-page="tpd">📋 <span>TPD Weekly Report</span></button>
-  <div class="user"><b>Administrator</b><small>State Access</small></div>
-</aside>
 
-<main>
-<header><div><p class="eyebrow">WBRL PERFORMANCE MONITORING SYSTEM</p><h2 id="pageTitle">State Dashboard</h2><p id="status">Loading live dashboard data...</p></div><button onclick="loadDashboard()" class="primary">↻ Refresh Data</button></header>
+    <!-- ================= SIDEBAR ================= -->
 
-<section id="dashboardPage">
-<div class="kpis">
-<div class="card"><span>👥</span><p>Total AWW</p><h3 id="total">0</h3></div>
-<div class="card"><span>🟢</span><p>Active AWW</p><h3 id="active">0</h3></div>
-<div class="card gold"><span>🥇</span><p>Gold</p><h3 id="gold">0</h3></div>
-<div class="card silver"><span>🥈</span><p>Silver</p><h3 id="silver">0</h3></div>
-<div class="card bronze"><span>🥉</span><p>Bronze</p><h3 id="bronze">0</h3></div>
-<div class="card"><span>⚫</span><p>Inactive</p><h3 id="inactive">0</h3></div>
+    <aside class="sidebar">
+
+        <div class="brand">
+            <div class="logo">W</div>
+
+            <div>
+                <h1>WBRL</h1>
+                <p>Performance Intelligence</p>
+            </div>
+        </div>
+
+        <p class="navtitle">DASHBOARDS</p>
+
+        <button class="nav active" data-page="dashboard">
+            👑 <span>Performance Dashboard</span>
+        </button>
+
+
+        <p class="navtitle">DATA MANAGEMENT</p>
+
+        <button class="nav" data-page="master">
+            ⚙️ <span>Master Data Upload</span>
+        </button>
+
+        <button class="nav" data-page="ica">
+            📤 <span>ICA Weekly Report</span>
+        </button>
+
+        <button class="nav" data-page="tpd">
+            📋 <span>TPD Weekly Report</span>
+        </button>
+
+
+        <div class="user">
+            <b>Administrator</b>
+            <small>State Access</small>
+        </div>
+
+    </aside>
+
+
+    <!-- ================= MAIN ================= -->
+
+    <main>
+
+        <header>
+
+            <div>
+
+                <p class="eyebrow">
+                    WBRL PERFORMANCE MONITORING SYSTEM
+                </p>
+
+                <h2 id="pageTitle">
+                    State Performance Dashboard
+                </h2>
+
+                <p id="status">
+                    Loading live dashboard data...
+                </p>
+
+            </div>
+
+            <button
+                onclick="loadDashboard()"
+                class="primary"
+            >
+                ↻ Refresh Data
+            </button>
+
+        </header>
+
+
+        <!-- ================= DASHBOARD ================= -->
+
+        <section id="dashboardPage">
+
+
+            <!-- FILTERS -->
+
+            <div class="filterbar">
+
+                <div>
+
+                    <label>
+                        Dashboard Level
+
+                        <select id="dashboardLevel">
+
+                            <option value="state">
+                                👑 State Dashboard
+                            </option>
+
+                            <option value="district">
+                                🏙️ District Dashboard
+                            </option>
+
+                            <option value="block">
+                                🏢 Block Dashboard
+                            </option>
+
+                        </select>
+
+                    </label>
+
+                </div>
+
+
+                <div id="districtFilterBox">
+
+                    <label>
+                        Select District
+
+                        <select id="districtFilter">
+
+                            <option value="">
+                                All Districts
+                            </option>
+
+                        </select>
+
+                    </label>
+
+                </div>
+
+
+                <div
+                    id="blockFilterBox"
+                    class="hidden"
+                >
+
+                    <label>
+                        Select Block
+
+                        <select id="blockFilter">
+
+                            <option value="">
+                                Select Block
+                            </option>
+
+                        </select>
+
+                    </label>
+
+                </div>
+
+            </div>
+
+
+            <!-- KPI CARDS -->
+
+            <div class="kpis">
+
+                <div class="card">
+                    <span>👥</span>
+                    <p>Total AWW</p>
+                    <h3 id="total">0</h3>
+                </div>
+
+
+                <div class="card">
+                    <span>🟢</span>
+                    <p>Active AWW</p>
+                    <h3 id="active">0</h3>
+                </div>
+
+
+                <div class="card gold">
+                    <span>🥇</span>
+                    <p>Gold Achieved</p>
+                    <h3 id="gold">0</h3>
+                </div>
+
+
+                <div class="card silver">
+                    <span>🥈</span>
+                    <p>Silver Achieved</p>
+                    <h3 id="silver">0</h3>
+                </div>
+
+
+                <div class="card bronze">
+                    <span>🥉</span>
+                    <p>Bronze Achieved</p>
+                    <h3 id="bronze">0</h3>
+                </div>
+
+
+                <div class="card">
+                    <span>⚫</span>
+                    <p>Inactive AWW</p>
+                    <h3 id="inactive">0</h3>
+                </div>
+
+            </div>
+
+
+            <!-- SUMMARY -->
+
+            <div class="two">
+
+                <div class="panel">
+
+                    <h3>Certification Rate</h3>
+
+                    <div class="rate">
+
+                        <strong id="rate">
+                            0%
+                        </strong>
+
+                        <span>
+                            Gold + Silver + Bronze
+                        </span>
+
+                    </div>
+
+                </div>
+
+
+                <div class="panel">
+
+                    <h3>Live System Status</h3>
+
+                    <p>
+                        Master Data → Weekly Upload →
+                        Automatic Calculation → Dashboard
+                    </p>
+
+                    <div id="systemInfo">
+                        Waiting for data...
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <!-- RANKINGS -->
+
+            <div class="rankgrid">
+
+                <div class="panel">
+
+                    <h3>
+                        🏆 Top 10 Supervisors
+                    </h3>
+
+                    <div id="top"></div>
+
+                </div>
+
+
+                <div class="panel">
+
+                    <h3>
+                        📉 Bottom 10 Supervisors
+                    </h3>
+
+                    <div id="bottom"></div>
+
+                </div>
+
+
+                <div class="panel">
+
+                    <h3 id="blocksTitle">
+                        👑 Top Blocks
+                    </h3>
+
+                    <div id="blocks"></div>
+
+                </div>
+
+            </div>
+
+
+        </section>
+
+
+        <!-- ================= MASTER UPLOAD ================= -->
+
+        <section
+            id="masterPage"
+            class="hidden"
+        >
+
+            <div class="panel formpanel">
+
+                <h3>
+                    ⚙️ Upload / Update Master Sheet
+                </h3>
+
+                <p>
+                    Upload the Master AWW Excel.
+                    Existing AWC CODE records will update automatically.
+                    New AWC CODE records will be added.
+                </p>
+
+                <form id="masterForm">
+
+                    <input
+                        type="file"
+                        name="file"
+                        accept=".xlsx,.xls"
+                        required
+                    >
+
+                    <button class="primary">
+                        Upload Master Sheet
+                    </button>
+
+                </form>
+
+                <div
+                    class="message"
+                    id="masterMsg"
+                ></div>
+
+            </div>
+
+        </section>
+
+
+        <!-- ================= ICA UPLOAD ================= -->
+
+        <section
+            id="icaPage"
+            class="hidden"
+        >
+
+            <div class="panel formpanel">
+
+                <h3>
+                    📤 ICA WEEKLY REPORT Upload
+                </h3>
+
+                <form
+                    class="reportForm"
+                    data-type="ICA"
+                >
+
+                    <label>
+
+                        Week Start
+
+                        <input
+                            type="date"
+                            name="week_start"
+                            required
+                        >
+
+                    </label>
+
+
+                    <label>
+
+                        Week End
+
+                        <input
+                            type="date"
+                            name="week_end"
+                            required
+                        >
+
+                    </label>
+
+
+                    <input
+                        type="file"
+                        name="file"
+                        accept=".xlsx,.xls"
+                        required
+                    >
+
+
+                    <button class="primary">
+                        Upload ICA Report
+                    </button>
+
+                </form>
+
+                <div class="message"></div>
+
+            </div>
+
+        </section>
+
+
+        <!-- ================= TPD UPLOAD ================= -->
+
+        <section
+            id="tpdPage"
+            class="hidden"
+        >
+
+            <div class="panel formpanel">
+
+                <h3>
+                    📋 TPD WEEKLY REPORT Upload
+                </h3>
+
+                <form
+                    class="reportForm"
+                    data-type="TPD"
+                >
+
+                    <label>
+
+                        Week Start
+
+                        <input
+                            type="date"
+                            name="week_start"
+                            required
+                        >
+
+                    </label>
+
+
+                    <label>
+
+                        Week End
+
+                        <input
+                            type="date"
+                            name="week_end"
+                            required
+                        >
+
+                    </label>
+
+
+                    <input
+                        type="file"
+                        name="file"
+                        accept=".xlsx,.xls"
+                        required
+                    >
+
+
+                    <button class="primary">
+                        Upload TPD Report
+                    </button>
+
+                </form>
+
+                <div class="message"></div>
+
+            </div>
+
+        </section>
+
+
+    </main>
+
 </div>
-<div class="two">
-  <div class="panel"><h3>Certification Rate</h3><div class="rate"><strong id="rate">0%</strong><span>Gold + Silver + Bronze</span></div></div>
-  <div class="panel"><h3>Live System Status</h3><p>Master Data → Weekly Upload → Automatic Calculation → Dashboard</p><div id="systemInfo">Waiting for data...</div></div>
-</div>
-<div class="rankgrid">
-<div class="panel"><h3>🏆 Top 10 Supervisors</h3><div id="top"></div></div>
-<div class="panel"><h3>📉 Bottom 10 Supervisors</h3><div id="bottom"></div></div>
-<div class="panel"><h3>👑 Top 3 Blocks</h3><div id="blocks"></div></div>
-</div>
-</section>
 
-<section id="masterPage" class="hidden">
-<div class="panel formpanel"><h3>⚙️ Upload / Update Master Sheet</h3><p>Upload the Master AWW Excel. Existing AWC CODE records will update automatically; new AWC CODE records will be added.</p>
-<form id="masterForm"><input type="file" name="file" accept=".xlsx,.xls" required><button class="primary">Upload Master Sheet</button></form><div class="message" id="masterMsg"></div></div>
-</section>
 
-<section id="icaPage" class="hidden">
-<div class="panel formpanel"><h3>📤 ICA WEEKLY REPORT Upload</h3>
-<form class="reportForm" data-type="ICA"><label>Week Start<input type="date" name="week_start" required></label><label>Week End<input type="date" name="week_end" required></label><input type="file" name="file" accept=".xlsx,.xls" required><button class="primary">Upload ICA Report</button></form><div class="message"></div></div>
-</section>
-
-<section id="tpdPage" class="hidden">
-<div class="panel formpanel"><h3>📋 TPD WEEKLY REPORT Upload</h3>
-<form class="reportForm" data-type="TPD"><label>Week Start<input type="date" name="week_start" required></label><label>Week End<input type="date" name="week_end" required></label><input type="file" name="file" accept=".xlsx,.xls" required><button class="primary">Upload TPD Report</button></form><div class="message"></div></div>
-</section>
-</main>
-</div>
 <script src="/static/app.js"></script>
-</body></html>
+
+</body>
+
+</html>
