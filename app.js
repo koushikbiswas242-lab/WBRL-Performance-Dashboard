@@ -1,648 +1,776 @@
-const pages = {
-    dashboard: "dashboardPage",
-    master: "masterPage",
-    ica: "icaPage",
-    tpd: "tpdPage"
-};
-
-
 // =====================================================
-// NAVIGATION
+// WBRL PERFORMANCE DASHBOARD - APP.JS
 // =====================================================
 
-document.querySelectorAll(".nav").forEach(button => {
+document.addEventListener("DOMContentLoaded", () => {
 
-    button.onclick = () => {
+    // =====================================================
+    // PAGE CONFIGURATION
+    // =====================================================
 
-        document
-            .querySelectorAll(".nav")
-            .forEach(item =>
-                item.classList.remove("active")
-            );
-
-        button.classList.add("active");
-
-        Object
-            .values(pages)
-            .forEach(id =>
-                document
-                    .getElementById(id)
-                    .classList.add("hidden")
-            );
-
-        document
-            .getElementById(
-                pages[button.dataset.page]
-            )
-            .classList.remove("hidden");
-
-
-        const titles = {
-
-            dashboard:
-                "State Performance Dashboard",
-
-            master:
-                "Master Data Upload",
-
-            ica:
-                "ICA Weekly Report Upload",
-
-            tpd:
-                "TPD Weekly Report Upload"
-
-        };
-
-
-        document
-            .getElementById("pageTitle")
-            .textContent =
-                titles[button.dataset.page];
-
+    const pages = {
+        dashboard: "dashboardPage",
+        master: "masterPage",
+        ica: "icaPage",
+        tpd: "tpdPage"
     };
 
-});
+    const titles = {
+        dashboard: "State Performance Dashboard",
+        master: "Master Data Upload",
+        ica: "ICA Weekly Report Upload",
+        tpd: "TPD Weekly Report Upload"
+    };
 
 
-// =====================================================
-// RANKING HTML
-// =====================================================
+    // =====================================================
+    // SAFE ELEMENT GETTER
+    // =====================================================
 
-function rankHtml(items) {
-
-    if (!items || !items.length) {
-
-        return `
-            <p class="empty">
-                No data available yet.
-            </p>
-        `;
-
+    function getElement(id) {
+        return document.getElementById(id);
     }
 
-    return items.map((item, index) => `
 
-        <div class="row">
+    // =====================================================
+    // NAVIGATION
+    // =====================================================
 
-            <span class="rank">
-                ${index + 1}
-            </span>
+    const navButtons = document.querySelectorAll(".nav");
 
-            <span class="name">
-                ${item.name}
-            </span>
+    navButtons.forEach(button => {
 
-            <span class="score">
-                ${item.score}%
-            </span>
+        button.addEventListener("click", () => {
 
-        </div>
+            const pageName = button.dataset.page;
 
-    `).join("");
-
-}
+            if (!pageName || !pages[pageName]) {
+                console.error("Invalid page:", pageName);
+                return;
+            }
 
 
-// =====================================================
-// LOAD DISTRICTS
-// =====================================================
+            // Remove active class
+            navButtons.forEach(item => {
+                item.classList.remove("active");
+            });
 
-async function loadDistricts() {
 
-    const districtSelect =
-        document.getElementById("districtFilter");
+            // Add active class
+            button.classList.add("active");
 
-    try {
 
-        const response = await fetch(
-            "/api/dashboard/districts"
-        );
+            // Hide all pages
+            Object.values(pages).forEach(pageId => {
 
-        const districts =
-            await response.json();
+                const page = getElement(pageId);
 
-        districtSelect.innerHTML =
-            `<option value="">
-                All Districts
-            </option>`;
+                if (page) {
+                    page.classList.add("hidden");
+                }
 
-        districts.forEach(district => {
+            });
 
-            const option =
-                document.createElement("option");
 
-            option.value = district;
+            // Show selected page
+            const selectedPage =
+                getElement(pages[pageName]);
 
-            option.textContent = district;
+            if (selectedPage) {
+                selectedPage.classList.remove("hidden");
+            }
 
-            districtSelect.appendChild(option);
+
+            // Change page title
+            const pageTitle =
+                getElement("pageTitle");
+
+            if (pageTitle) {
+                pageTitle.textContent =
+                    titles[pageName];
+            }
 
         });
 
-    }
-
-    catch (error) {
-
-        console.error(
-            "District loading error:",
-            error
-        );
-
-    }
-
-}
+    });
 
 
-// =====================================================
-// LOAD BLOCKS
-// =====================================================
+    // =====================================================
+    // RANKING HTML
+    // =====================================================
 
-async function loadBlocks(district) {
+    function rankHtml(items) {
 
-    const blockSelect =
-        document.getElementById("blockFilter");
+        if (!items || !items.length) {
 
-    blockSelect.innerHTML =
-        `<option value="">
-            Select Block
-        </option>`;
+            return `
+                <p class="empty">
+                    No data available yet.
+                </p>
+            `;
 
-    if (!district) return;
+        }
 
-    try {
 
-        const response = await fetch(
-            `/api/dashboard/blocks/${encodeURIComponent(district)}`
-        );
+        return items.map((item, index) => `
 
-        const blocks =
-            await response.json();
+            <div class="row">
 
-        blocks.forEach(block => {
+                <span class="rank">
+                    ${index + 1}
+                </span>
 
-            const option =
-                document.createElement("option");
+                <span class="name">
+                    ${item.name || "Unknown"}
+                </span>
 
-            option.value = block;
+                <span class="score">
+                    ${item.score || 0}%
+                </span>
 
-            option.textContent = block;
+            </div>
 
-            blockSelect.appendChild(option);
-
-        });
+        `).join("");
 
     }
 
-    catch (error) {
 
-        console.error(
-            "Block loading error:",
-            error
-        );
+    // =====================================================
+    // LOAD DISTRICTS
+    // =====================================================
+
+    async function loadDistricts() {
+
+        const districtSelect =
+            getElement("districtFilter");
+
+        if (!districtSelect) return;
+
+
+        try {
+
+            const response =
+                await fetch("/api/dashboard/districts");
+
+
+            if (!response.ok) {
+                throw new Error("Could not load districts");
+            }
+
+
+            const districts =
+                await response.json();
+
+
+            districtSelect.innerHTML =
+                `<option value="">All Districts</option>`;
+
+
+            districts.forEach(district => {
+
+                const option =
+                    document.createElement("option");
+
+                option.value = district;
+                option.textContent = district;
+
+                districtSelect.appendChild(option);
+
+            });
+
+        }
+
+        catch (error) {
+
+            console.error(
+                "District loading error:",
+                error
+            );
+
+        }
 
     }
 
-}
+
+    // =====================================================
+    // LOAD BLOCKS
+    // =====================================================
+
+    async function loadBlocks(district) {
+
+        const blockSelect =
+            getElement("blockFilter");
+
+        if (!blockSelect) return;
 
 
-// =====================================================
-// GET CURRENT DASHBOARD API
-// =====================================================
-
-function getDashboardURL() {
-
-    const level =
-        document.getElementById(
-            "dashboardLevel"
-        ).value;
-
-    const district =
-        document.getElementById(
-            "districtFilter"
-        ).value;
-
-    const block =
-        document.getElementById(
-            "blockFilter"
-        ).value;
+        blockSelect.innerHTML =
+            `<option value="">Select Block</option>`;
 
 
-    // STATE
-    if (level === "state") {
+        if (!district) return;
+
+
+        try {
+
+            const response =
+                await fetch(
+                    `/api/dashboard/blocks/${encodeURIComponent(district)}`
+                );
+
+
+            if (!response.ok) {
+                throw new Error("Could not load blocks");
+            }
+
+
+            const blocks =
+                await response.json();
+
+
+            blocks.forEach(block => {
+
+                const option =
+                    document.createElement("option");
+
+                option.value = block;
+                option.textContent = block;
+
+                blockSelect.appendChild(option);
+
+            });
+
+        }
+
+        catch (error) {
+
+            console.error(
+                "Block loading error:",
+                error
+            );
+
+        }
+
+    }
+
+
+    // =====================================================
+    // GET DASHBOARD API URL
+    // =====================================================
+
+    function getDashboardURL() {
+
+        const levelElement =
+            getElement("dashboardLevel");
+
+        const districtElement =
+            getElement("districtFilter");
+
+        const blockElement =
+            getElement("blockFilter");
+
+
+        if (!levelElement) {
+            return "/api/dashboard/state";
+        }
+
+
+        const level =
+            levelElement.value;
+
+        const district =
+            districtElement
+                ? districtElement.value
+                : "";
+
+        const block =
+            blockElement
+                ? blockElement.value
+                : "";
+
+
+        // STATE
+        if (level === "state") {
+
+            return "/api/dashboard/state";
+
+        }
+
+
+        // DISTRICT
+        if (level === "district") {
+
+            if (!district) {
+                return "/api/dashboard/state";
+            }
+
+            return `/api/dashboard/district/${encodeURIComponent(district)}`;
+
+        }
+
+
+        // BLOCK
+        if (level === "block") {
+
+            if (!district || !block) {
+                return null;
+            }
+
+            return `/api/dashboard/block/${encodeURIComponent(district)}/${encodeURIComponent(block)}`;
+
+        }
+
 
         return "/api/dashboard/state";
 
     }
 
 
-    // DISTRICT
-    if (level === "district") {
+    // =====================================================
+    // LOAD DASHBOARD
+    // =====================================================
 
-        if (!district) {
+    async function loadDashboard() {
 
-            return "/api/dashboard/state";
+        const status =
+            getElement("status");
 
-        }
-
-        return `/api/dashboard/district/${encodeURIComponent(district)}`;
-
-    }
-
-
-    // BLOCK
-    if (level === "block") {
-
-        if (!district || !block) {
-
-            return null;
-
-        }
-
-        return `/api/dashboard/block/${encodeURIComponent(district)}/${encodeURIComponent(block)}`;
-
-    }
+        const url =
+            getDashboardURL();
 
 
-    return "/api/dashboard/state";
+        if (!url) {
 
-}
+            if (status) {
+                status.textContent =
+                    "Please select District and Block.";
+            }
 
-
-// =====================================================
-// LOAD DASHBOARD
-// =====================================================
-
-async function loadDashboard() {
-
-    const status =
-        document.getElementById("status");
-
-    const url =
-        getDashboardURL();
-
-
-    if (!url) {
-
-        status.textContent =
-            "Please select District and Block.";
-
-        return;
-
-    }
-
-
-    status.textContent =
-        "Refreshing live data...";
-
-
-    try {
-
-        const response =
-            await fetch(url);
-
-        const data =
-            await response.json();
-
-
-        if (!response.ok) {
-
-            throw new Error(
-                data.detail ||
-                "Dashboard loading error"
-            );
+            return;
 
         }
 
 
-        const summary =
-            data.summary;
+        if (status) {
+            status.textContent =
+                "Refreshing live data...";
+        }
 
 
-        // KPI DATA
+        try {
 
-        document
-            .getElementById("total")
-            .textContent =
-                summary.total_aww;
+            const response =
+                await fetch(url);
 
 
-        document
-            .getElementById("active")
-            .textContent =
-                summary.active_aww;
+            const data =
+                await response.json();
 
 
-        document
-            .getElementById("inactive")
-            .textContent =
-                summary.inactive_aww;
+            if (!response.ok) {
 
-
-        document
-            .getElementById("gold")
-            .textContent =
-                summary.gold;
-
-
-        document
-            .getElementById("silver")
-            .textContent =
-                summary.silver;
-
-
-        document
-            .getElementById("bronze")
-            .textContent =
-                summary.bronze;
-
-
-        document
-            .getElementById("rate")
-            .textContent =
-                summary.certification_rate + "%";
-
-
-        // RANKINGS
-
-        document
-            .getElementById("top")
-            .innerHTML =
-                rankHtml(
-                    data.top_supervisors
+                throw new Error(
+                    data.detail ||
+                    "Dashboard loading error"
                 );
-
-
-        document
-            .getElementById("bottom")
-            .innerHTML =
-                rankHtml(
-                    data.bottom_supervisors
-                );
-
-
-        document
-            .getElementById("blocks")
-            .innerHTML =
-                rankHtml(
-                    data.top_blocks || []
-                );
-
-
-        // SYSTEM INFO
-
-        document
-            .getElementById("systemInfo")
-            .textContent =
-                `${summary.total_aww} AWW records loaded. ` +
-                `Live analytics is active.`;
-
-
-        status.textContent =
-            "Live data loaded successfully.";
-
-
-    }
-
-    catch (error) {
-
-        console.error(error);
-
-        status.textContent =
-            "Could not load live dashboard data.";
-
-    }
-
-}
-
-
-// =====================================================
-// FILTER LEVEL CHANGE
-// =====================================================
-
-document
-    .getElementById("dashboardLevel")
-    .addEventListener(
-        "change",
-        async function () {
-
-            const level =
-                this.value;
-
-            const districtBox =
-                document.getElementById(
-                    "districtFilterBox"
-                );
-
-            const blockBox =
-                document.getElementById(
-                    "blockFilterBox"
-                );
-
-
-            // STATE
-            if (level === "state") {
-
-                districtBox.classList.add("hidden");
-
-                blockBox.classList.add("hidden");
-
-                document
-                    .getElementById("pageTitle")
-                    .textContent =
-                        "State Performance Dashboard";
 
             }
 
 
-            // DISTRICT
-            else if (level === "district") {
-
-                districtBox.classList.remove("hidden");
-
-                blockBox.classList.add("hidden");
-
-                document
-                    .getElementById("pageTitle")
-                    .textContent =
-                        "District Performance Dashboard";
-
-            }
+            const summary =
+                data.summary || {};
 
 
-            // BLOCK
-            else {
+            // =====================================================
+            // KPI DATA
+            // =====================================================
 
-                districtBox.classList.remove("hidden");
+            const kpis = {
 
-                blockBox.classList.remove("hidden");
+                total: summary.total_aww || 0,
 
-                document
-                    .getElementById("pageTitle")
-                    .textContent =
-                        "Block Performance Dashboard";
+                active: summary.active_aww || 0,
 
-            }
+                inactive: summary.inactive_aww || 0,
 
+                gold: summary.gold || 0,
 
-            loadDashboard();
+                silver: summary.silver || 0,
 
-        }
-    );
+                bronze: summary.bronze || 0
 
-
-// =====================================================
-// DISTRICT CHANGE
-// =====================================================
-
-document
-    .getElementById("districtFilter")
-    .addEventListener(
-        "change",
-        async function () {
-
-            const district =
-                this.value;
-
-            await loadBlocks(district);
-
-            loadDashboard();
-
-        }
-    );
+            };
 
 
-// =====================================================
-// BLOCK CHANGE
-// =====================================================
+            Object.entries(kpis).forEach(
+                ([id, value]) => {
 
-document
-    .getElementById("blockFilter")
-    .addEventListener(
-        "change",
-        loadDashboard
-    );
+                    const element =
+                        getElement(id);
 
+                    if (element) {
+                        element.textContent = value;
+                    }
 
-// =====================================================
-// MESSAGE
-// =====================================================
-
-function showMessage(
-    element,
-    text,
-    success = true
-) {
-
-    element.className =
-        "message " +
-        (
-            success
-                ? "success"
-                : "error"
-        );
-
-    element.textContent = text;
-
-}
-
-
-// =====================================================
-// MASTER UPLOAD
-// =====================================================
-
-document
-    .getElementById("masterForm")
-    .addEventListener(
-        "submit",
-        async function (event) {
-
-            event.preventDefault();
-
-            const message =
-                document.getElementById(
-                    "masterMsg"
-                );
-
-            const formData =
-                new FormData(this);
-
-
-            showMessage(
-                message,
-                "Uploading master data...",
-                true
+                }
             );
 
 
-            try {
+            const rate =
+                getElement("rate");
 
-                const response =
-                    await fetch(
-                        "/api/master/upload",
-                        {
-                            method: "POST",
-                            body: formData
-                        }
+            if (rate) {
+
+                rate.textContent =
+                    (summary.certification_rate || 0)
+                    + "%";
+
+            }
+
+
+            // =====================================================
+            // RANKINGS
+            // =====================================================
+
+            const top =
+                getElement("top");
+
+            if (top) {
+
+                top.innerHTML =
+                    rankHtml(
+                        data.top_supervisors || []
                     );
 
-                const data =
-                    await response.json();
+            }
 
 
-                if (!response.ok) {
+            const bottom =
+                getElement("bottom");
 
-                    throw new Error(
-                        data.detail ||
-                        "Upload failed"
+            if (bottom) {
+
+                bottom.innerHTML =
+                    rankHtml(
+                        data.bottom_supervisors || []
                     );
+
+            }
+
+
+            const blocks =
+                getElement("blocks");
+
+            if (blocks) {
+
+                blocks.innerHTML =
+                    rankHtml(
+                        data.top_blocks || []
+                    );
+
+            }
+
+
+            // =====================================================
+            // SYSTEM INFO
+            // =====================================================
+
+            const systemInfo =
+                getElement("systemInfo");
+
+            if (systemInfo) {
+
+                systemInfo.textContent =
+                    `${summary.total_aww || 0} AWW records loaded. Live analytics is active.`;
+
+            }
+
+
+            if (status) {
+
+                status.textContent =
+                    "Live data loaded successfully.";
+
+            }
+
+        }
+
+        catch (error) {
+
+            console.error(
+                "Dashboard error:",
+                error
+            );
+
+
+            if (status) {
+
+                status.textContent =
+                    "Could not load live dashboard data.";
+
+            }
+
+        }
+
+    }
+
+
+    // =====================================================
+    // DASHBOARD LEVEL CHANGE
+    // =====================================================
+
+    const dashboardLevel =
+        getElement("dashboardLevel");
+
+    if (dashboardLevel) {
+
+        dashboardLevel.addEventListener(
+            "change",
+            () => {
+
+                const level =
+                    dashboardLevel.value;
+
+                const districtBox =
+                    getElement("districtFilterBox");
+
+                const blockBox =
+                    getElement("blockFilterBox");
+
+                const pageTitle =
+                    getElement("pageTitle");
+
+
+                // STATE
+                if (level === "state") {
+
+                    if (districtBox) {
+                        districtBox.classList.add("hidden");
+                    }
+
+                    if (blockBox) {
+                        blockBox.classList.add("hidden");
+                    }
+
+                    if (pageTitle) {
+                        pageTitle.textContent =
+                            "State Performance Dashboard";
+                    }
 
                 }
 
 
-                showMessage(
+                // DISTRICT
+                else if (level === "district") {
 
-                    message,
+                    if (districtBox) {
+                        districtBox.classList.remove("hidden");
+                    }
 
-                    `${data.message}
-                    New: ${data.created},
-                    Updated: ${data.updated},
-                    Skipped: ${data.skipped}`,
+                    if (blockBox) {
+                        blockBox.classList.add("hidden");
+                    }
 
-                    true
+                    if (pageTitle) {
+                        pageTitle.textContent =
+                            "District Performance Dashboard";
+                    }
 
-                );
+                }
 
 
-                await loadDistricts();
+                // BLOCK
+                else if (level === "block") {
+
+                    if (districtBox) {
+                        districtBox.classList.remove("hidden");
+                    }
+
+                    if (blockBox) {
+                        blockBox.classList.remove("hidden");
+                    }
+
+                    if (pageTitle) {
+                        pageTitle.textContent =
+                            "Block Performance Dashboard";
+                    }
+
+                }
+
 
                 loadDashboard();
 
-                this.reset();
+            }
+        );
 
+    }
+
+
+    // =====================================================
+    // DISTRICT CHANGE
+    // =====================================================
+
+    const districtFilter =
+        getElement("districtFilter");
+
+    if (districtFilter) {
+
+        districtFilter.addEventListener(
+            "change",
+            async function () {
+
+                await loadBlocks(this.value);
+
+                loadDashboard();
 
             }
+        );
 
-            catch (error) {
+    }
+
+
+    // =====================================================
+    // BLOCK CHANGE
+    // =====================================================
+
+    const blockFilter =
+        getElement("blockFilter");
+
+    if (blockFilter) {
+
+        blockFilter.addEventListener(
+            "change",
+            loadDashboard
+        );
+
+    }
+
+
+    // =====================================================
+    // SHOW MESSAGE
+    // =====================================================
+
+    function showMessage(
+        element,
+        text,
+        success = true
+    ) {
+
+        if (!element) return;
+
+
+        element.className =
+            "message " +
+            (success ? "success" : "error");
+
+        element.textContent =
+            text;
+
+    }
+
+
+    // =====================================================
+    // MASTER DATA UPLOAD
+    // =====================================================
+
+    const masterForm =
+        getElement("masterForm");
+
+    if (masterForm) {
+
+        masterForm.addEventListener(
+            "submit",
+            async function (event) {
+
+                event.preventDefault();
+
+
+                const message =
+                    getElement("masterMsg");
+
+                const formData =
+                    new FormData(this);
+
 
                 showMessage(
                     message,
-                    error.message,
-                    false
+                    "Uploading master data..."
                 );
 
+
+                try {
+
+                    const response =
+                        await fetch(
+                            "/api/master/upload",
+                            {
+                                method: "POST",
+                                body: formData
+                            }
+                        );
+
+
+                    const data =
+                        await response.json();
+
+
+                    if (!response.ok) {
+
+                        throw new Error(
+                            data.detail ||
+                            "Upload failed"
+                        );
+
+                    }
+
+
+                    showMessage(
+
+                        message,
+
+                        `${data.message}
+New: ${data.created || 0}
+Updated: ${data.updated || 0}
+Skipped: ${data.skipped || 0}`,
+
+                        true
+
+                    );
+
+
+                    await loadDistricts();
+
+                    await loadDashboard();
+
+                    this.reset();
+
+                }
+
+                catch (error) {
+
+                    showMessage(
+                        message,
+                        error.message,
+                        false
+                    );
+
+                }
+
             }
+        );
 
-        }
-    );
+    }
 
 
-// =====================================================
-// ICA / TPD UPLOAD
-// =====================================================
+    // =====================================================
+    // ICA / TPD REPORT UPLOAD
+    // =====================================================
 
-document
-    .querySelectorAll(".reportForm")
-    .forEach(form => {
+    const reportForms =
+        document.querySelectorAll(".reportForm");
+
+
+    reportForms.forEach(form => {
 
         form.addEventListener(
             "submit",
@@ -650,10 +778,11 @@ document
 
                 event.preventDefault();
 
+
                 const message =
-                    form
-                        .parentElement
+                    form.parentElement
                         .querySelector(".message");
+
 
                 const formData =
                     new FormData(form);
@@ -662,6 +791,12 @@ document
                 formData.append(
                     "report_type",
                     form.dataset.type
+                );
+
+
+                showMessage(
+                    message,
+                    "Uploading report..."
                 );
 
 
@@ -696,18 +831,17 @@ document
                         message,
 
                         `${data.message}
-                        Processed: ${data.processed},
-                        Skipped: ${data.skipped}`,
+Processed: ${data.processed || 0}
+Skipped: ${data.skipped || 0}`,
 
                         true
 
                     );
 
 
-                    loadDashboard();
+                    await loadDashboard();
 
                     form.reset();
-
 
                 }
 
@@ -724,20 +858,31 @@ document
             }
         );
 
-    );
+    });
 
 
-// =====================================================
-// INITIAL LOAD
-// =====================================================
+    // =====================================================
+    // REFRESH BUTTON
+    // =====================================================
 
-document.addEventListener(
-    "DOMContentLoaded",
-    async () => {
+    const refreshButton =
+        getElement("refreshBtn");
 
-        await loadDistricts();
+    if (refreshButton) {
 
-        loadDashboard();
+        refreshButton.addEventListener(
+            "click",
+            loadDashboard
+        );
 
     }
-);
+
+
+    // =====================================================
+    // INITIAL LOAD
+    // =====================================================
+
+    loadDistricts();
+    loadDashboard();
+
+});
